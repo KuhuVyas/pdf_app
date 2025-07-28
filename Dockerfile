@@ -1,26 +1,17 @@
-# Use AMD64-compatible base image
-FROM --platform=linux/amd64 python:3.9-slim
+# Start from Python base image for AMD64
+FROM --platform=linux/amd64 python:3.10-slim
 
-# Set working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libmupdf-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install Python dependencies
+# Copy only requirements first for faster rebuilds
 COPY requirements.txt .
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download NLTK data
-RUN python -m nltk.downloader -d /app/nltk_data punkt stopwords
+# Copy the full project into container
+COPY . .
 
-# Copy source code
-COPY src/ src/
-
-# Set NLTK data path
-ENV NLTK_DATA=/app/nltk_data
-
-# Run Round 1B script
-CMD ["python", "src/round_1b.py"]
+# Run the main processing script on container start
+CMD ["python", "process.py"]
